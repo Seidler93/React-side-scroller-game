@@ -1,0 +1,6 @@
+/* obstacle.css */
+.obstacle {
+  background-color: red;
+  position: absolute;
+  bottom: 0; /* Adjust as needed */
+}
