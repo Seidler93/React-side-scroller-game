@@ -8,8 +8,7 @@ const Game = () => {
   const [playerPosition, setPlayerPosition] = useState({x: 300, y: 0});
   const [playerSpeed, setPlayerSpeed] = useState(0);
   const [isJumping, setIsJumping] = useState(false);
-  const [canMoveX, setCanMoveX] = useState(true);
-  const [canMoveY, setCanMoveY] = useState(true);
+  const [canMove, setCanMove] = useState(true);
   const [backgroundPosition, setBackgroundPosition] = useState(0);
   // const [pressedKeys, setPressedKeys] = useState([]);
   const playerWidth = 50
@@ -74,31 +73,31 @@ const Game = () => {
 
     if (
       playerRef.right >= obstacleRef.left &&
-      playerRef.right < obstacleRef.left
+      playerRef.right <= obstacleRef.left
     ) {
-      console.log(newX);
       newX = playerRef.left - 5
+      return { y: newY, x: newX }
     } 
     if (
       playerRef.left <= obstacleRef.right &&
       playerRef.left >= obstacleRef.right
     ) {
-      console.log(newX);
       newX = playerRef.left + 5
+      return { y: newY, x: newX }
     } 
     if (
       playerRef.bottom <= obstacleRef.top &&
       playerRef.bottom >= obstacleRef.bottom
     ) {
-      console.log(newY);
       newY = playerRef.bottom + 5
+      return { y: newY, x: newX }
     } 
     if (
       playerRef.top >= obstacleRef.bottom &&
       playerRef.top <= obstacleRef.top
     ) {
-      console.log(newY);
       newY = playerRef.bottom - 5
+      return { y: newY, x: newX }
     } 
 
     return { y: newY, x: newX }
@@ -108,22 +107,18 @@ const Game = () => {
     setPlayerPosition((prevPlayerPosition) => {
       let newX = prevPlayerPosition.x;
       let newY = prevPlayerPosition.y;
-
       // console.log('me', playerRect);
-      if (canMoveX) {
-        if (xInput.indexOf('d') > -1) {
-          newX += 5;
-        } else if (xInput.indexOf('a') > -1) {
-          newX -= 5;
-        } 
-      }
+  
+      if (xInput.indexOf('d') > -1) {
+        newX += 5;
+      } else if (xInput.indexOf('a') > -1) {
+        newX -= 5;
+      } 
       
-      if (canMoveY) {
-        if (yInput.includes('w') ) {
-          newY += 5
-        } else if (yInput.indexOf('s') > -1) {
-          newY -= 5;
-        }
+      if (yInput.includes('w') ) {
+        newY += 5
+      } else if (yInput.indexOf('s') > -1) {
+        newY -= 5;
       }
  
       if (newX < 0) {
@@ -206,19 +201,3 @@ const Game = () => {
 };
 
 export default Game;
-
-
-// console.log(playerRect.left, obstacleRect.right);
-        // Check for collision between player and obstacle
-        // if (
-        //   playerRect.left < obstacleRect.right &&
-        //   playerRect.right > obstacleRect.left &&
-        //   playerRect.top < obstacleRect.bottom &&
-        //   playerRect.bottom > obstacleRect.top
-        // ) {
-        //   // console.log('collided');
-        //   // Collision detected, adjust player's position
-        //   newX = obstacleRect.left < playerRect.left
-        //     ? obstacleRect.right // Move player to the right of the obstacle
-        //     : obstacleRect.left - playerWidth; // Move player to the left of the obstacle
-        // }
