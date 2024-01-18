@@ -2,18 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import Player from './player/Player';
 import Obstacle from './obstacle/Obstacle';
-import { handleCollision } from '../utils/inputHandlers';
+import Bullet from './projectiles/Bullet';
 
 const Game = () => {
   const [playerPosition, setPlayerPosition] = useState({x: 300, y: 0});
-  const [playerSpeed, setPlayerSpeed] = useState(0);
   const [isJumping, setIsJumping] = useState(false);
-  const [canMove, setCanMove] = useState(true);
   const [backgroundPosition, setBackgroundPosition] = useState(0);
-  // const [pressedKeys, setPressedKeys] = useState([]);
-  const playerWidth = 50
-  const playerHeight = 50
-  const weight = 4
+  const [bullets, setBullets] = useState([]);
+
   let xInput = []
   let yInput = []
 
@@ -54,18 +50,37 @@ const Game = () => {
     }
   };
 
-  const jump = () => {
-    // console.log('trying to jump');
-      setIsJumping(true);
-      setTimeout(() => {
-        // setPlayerPosition((prevPosition) => prevPosition)
-        setIsJumping(false)
-      }, 500); // Adjust the duration of the jump
-  };
-
-  const inAir = (y) => {
-    return y > 0
-  };
+  useEffect(() => {
+    const handleMouseDown = (e) => {
+      if (e.button === 0) { // Check for left mouse button (button 0)
+        // Get the mouse position relative to the game container
+        const mouseX = e.clientX
+        const mouseY = (e.clientY - e.target.getBoundingClientRect().height) * -1;
+  
+        // Calculate the angle and distance between player and mouse
+        const angle = Math.atan2(mouseY - playerPosition.y, mouseX - playerPosition.x);
+        
+        // Spawn a bullet at the player's position
+        const newBullet = {
+          id: bullets.length + 1,
+          position: { x: playerPosition.x, y: playerPosition.y },
+          target: { x: mouseX, y: mouseY },
+          angle: angle,
+          distance: 5, // Bullet speed
+          time: 0, // Bullet life time variable
+        };
+  
+        setBullets((prevBullets) => [...prevBullets, newBullet]);
+      }
+    };
+  
+    window.addEventListener('mousedown', handleMouseDown);
+  
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, [bullets, playerPosition]);
+  
 
   const collisionCorrection = (playerRef, obstacleRef) => {
     let newX = playerRef.left;
@@ -150,8 +165,7 @@ const Game = () => {
     setBackgroundPosition((prevPosition) => prevPosition - 5);
   }, [playerPosition]);
 
-  const handleCollision = (id, obstacleRect) => {
-    
+  const handleObstacleCollision = (id, obstacleRect) => {
     setPlayerPosition((prevPlayerPosition) => {
       let newX = prevPlayerPosition.x;
       let newY = prevPlayerPosition.y;
@@ -177,14 +191,41 @@ const Game = () => {
     })
   };
 
+  const updateBullet = () => {
+    setBullets((prevBullets) => {
+      let newBullets = [];
+      for (let i = 0; i < prevBullets.length; i++) {
+        // Get the properties of the current bullet
+        const { position, angle, distance, time } = prevBullets[i];
+  
+        // Update bullet position based on angle and distance
+        const bulletX = position.x + distance * Math.cos(angle);
+        const bulletY = position.y + distance * Math.sin(angle);
+  
+        // Update time interval by 1
+        const newTime = time + 1
+
+        // Create a new bullet object with updated position
+        const updatedBullet = { ...prevBullets[i], position: { x: bulletX, y: bulletY }, time: newTime };
+        
+        // Add the updated bullet to the newBullets array if it's time hasn't run out
+        if (newTime < 300) {
+          newBullets = [...newBullets, updatedBullet];
+        }
+      }
+      return newBullets;
+    });
+  };
+
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
       // Check for collision using the ref
      updatePlayerPosition()
-    }, 16); // Adjust the interval as needed
+     updateBullet()
+    }, 16);
     
-
     return () => {
       clearInterval(interval);
     };
@@ -194,7 +235,10 @@ const Game = () => {
     <div className="game-container" style={{ backgroundPosition: `${backgroundPosition}px 0` }}>
       <Player position={playerPosition} isJumping={isJumping}/>
       {obstacles.map((obstacle) => (
-        <Obstacle key={obstacle.id} id={obstacle.id} position={obstacle.position} width={obstacle.width} height={obstacle.height} handleCollision={handleCollision} />
+        <Obstacle key={obstacle.id} id={obstacle.id} position={obstacle.position} width={obstacle.width} height={obstacle.height} handleCollision={handleObstacleCollision} />
+      ))}
+      {bullets.map((bullet) => (
+        <Bullet key={bullet.id} position={bullet.position} target={bullet.target} />
       ))}
     </div>
   );
