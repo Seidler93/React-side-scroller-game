@@ -15,6 +15,8 @@ export default function Obstacle({ id, position, height, width, handleCollision,
     handleCollision(id, obstacleRect);
   }, [id, playerPosition]);
 
+  
+
   return (
     <>
       <div id={id} className={itemClass} style={{ left: position.x, bottom: position.y, width: width, height: height}}></div>

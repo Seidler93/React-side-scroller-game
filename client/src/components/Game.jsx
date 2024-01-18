@@ -4,12 +4,13 @@ import Bullet from './projectiles/Projectile';
 import Enemies from './enemies/Enemies';
 import { useGame } from '../utils/GameContext';
 import Obstacles from './obstacles/Obstacles';
-import Projectiles from './projectiles/Porjectiles';
+import Projectiles from './projectiles/Projectiles';
 import './game.css'
 
 const Game = () => {
   const [backgroundPosition, setBackgroundPosition] = useState(0);
-  const { playerPosition, setPlayerPosition, projectiles, setProjectiles } = useGame()
+  const { playerPosition, setPlayerPosition, projectiles, setProjectiles, obstacles } = useGame()
+  // console.log(obstacles);
 
   let xInput = []
   let yInput = []
@@ -50,7 +51,6 @@ const Game = () => {
         const mouseX = e.clientX
         // const mouseY = (e.clientY - e.target.getBoundingClientRect().height) * -1;
         const mouseY = (e.clientY - window.innerHeight) * -1;
-        console.log(window.innerHeight);
         // Calculate the angle and distance between player and mouse
         const angle = Math.atan2(mouseY - playerPosition.y, mouseX - playerPosition.x);
         
@@ -77,7 +77,43 @@ const Game = () => {
       window.removeEventListener('mousedown', handleMouseDown);
     };
   }, [projectiles, playerPosition]);
-  
+
+  const playerCollisionCorrection = (playerRef, obstacleRef) => {
+    let newX = playerRef.left;
+    let newY = playerRef.bottom;
+
+    if (
+      playerRef.right > obstacleRef.left &&
+      playerRef.right < obstacleRef.left
+    ) {
+      newX = playerRef.left - 5
+      console.log('col');
+      return { y: newY, x: newX }
+    } 
+    if (
+      playerRef.left < obstacleRef.right &&
+      playerRef.left > obstacleRef.right
+    ) {
+      newX = playerRef.left + 5
+      return { y: newY, x: newX }
+    } 
+    if (
+      playerRef.bottom < obstacleRef.top &&
+      playerRef.bottom > obstacleRef.bottom
+    ) {
+      newY = playerRef.bottom + 5
+      return { y: newY, x: newX }
+    } 
+    if (
+      playerRef.top > obstacleRef.bottom &&
+      playerRef.top < obstacleRef.top
+    ) {
+      newY = playerRef.bottom - 5
+      return { y: newY, x: newX }
+    } 
+
+    return { y: newY, x: newX }
+  }  
 
   const updatePlayerPosition = () => {    
     setPlayerPosition((prevPlayerPosition) => {
@@ -90,11 +126,38 @@ const Game = () => {
         newX -= 5;
       } 
       
-      if (yInput.includes('w') ) {
+      if (yInput.indexOf('w') > -1) {
         newY += 5
       } else if (yInput.indexOf('s') > -1) {
         newY -= 5;
       }
+
+      const playerRect = {
+        left: prevPlayerPosition.x,
+        right: prevPlayerPosition.x + 50,
+        top: prevPlayerPosition.y + 50,
+        bottom: prevPlayerPosition.y,
+      }
+
+      // for (let i = 0; i < obstacles.length; i++) {
+      //   const obstacle = obstacles[i];
+  
+      //   const obstacleRect = {
+      //     left: obstacle.position.x,
+      //     right: obstacle.position.x + obstacle.width, 
+      //     top: obstacle.position.y + obstacle.height, 
+      //     bottom: obstacle.position.y, 
+      //   };
+  
+      //   if (
+      //     playerRect.right > obstacleRect.left &&
+      //     playerRect.left < obstacleRect.right &&
+      //     playerRect.bottom < obstacleRect.top &&
+      //     playerRect.top > obstacleRect.bottom
+      //   ) {
+      //     return playerCollisionCorrection(playerRect, obstacleRect)
+      //   } 
+      // }
  
       if (newX < 0) {
         newX = 0;
@@ -149,36 +212,6 @@ const Game = () => {
       return newProjectiles;
     });
   }, [playerPosition]);
-
-  const updateProjectiles = () => {
-    setProjectiles((prevProjectiles) => {
-      if (!prevProjectiles) {
-        return []; // Return an empty array if prevProjectiles is undefined or null
-      }
-
-      let newProjectiles = [];
-      for (let i = 0; i < prevProjectiles.length; i++) {
-        // Get the properties of the current projectile
-        const { position, angle, distance, time } = prevProjectiles[i];
-  
-        // Update projectile position based on angle and distance
-        const projectileX = position.x + distance * Math.cos(angle);
-        const projectileY = position.y + distance * Math.sin(angle);
-  
-        // Update time interval by 1
-        const newTime = time + 1
-
-        // Create a new projectile object with updated position
-        const updatedProjectile = { ...prevProjectiles[i], position: { x: projectileX, y: projectileY }, time: newTime };
-        
-        // Add the updated projectile to the newProjectiles array if it's time hasn't run out
-        if (newTime < 300) {
-          newProjectiles = [...newProjectiles, updatedProjectile];
-        }
-      }
-      return newProjectiles;
-    });
-  };
 
   // Tick for updating player movement
   useEffect(() => {

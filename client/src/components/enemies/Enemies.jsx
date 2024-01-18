@@ -41,7 +41,7 @@ export default function Enemies() {
   return (
     <>
       {enemies.length > 0 && enemies.map((enemy) => (
-        <Enemy itemClass={enemy.class} key={enemy.id} id={enemy.id} position={enemy.position} width={enemy.width} height={enemy.height} handlePlayerCollision={handlePlayerCollision}/>
+        <Enemy health={enemy.health} itemClass={enemy.class} key={enemy.id} id={enemy.id} position={enemy.position} width={enemy.width} height={enemy.height} handlePlayerCollision={handlePlayerCollision}/>
       ))}
     </>
   )
