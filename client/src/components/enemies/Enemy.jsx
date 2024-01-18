@@ -5,21 +5,15 @@ export default function Enemy({ id, position, height, width, handlePlayerCollisi
   const {playerPosition, setPlayerPosition, bullets, setBullets, setPlayerHealth} = useGame()
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const enemyRect = {
-        left: position.x,
-        right: position.x + width, 
-        top: position.y + height, 
-        bottom: position.y, 
-      };
-      // Check for collision using the ref
-      handlePlayerCollision(id, enemyRect, playerCollision);
-    }, 8); // Adjust the interval as needed
-
-    return () => {
-      clearInterval(interval);
+    const enemyRect = {
+      left: position.x,
+      right: position.x + width, 
+      top: position.y + height, 
+      bottom: position.y, 
     };
-  }, [id, handlePlayerCollision]);
+    // Check for collision using the ref
+    handlePlayerCollision(id, enemyRect, playerCollision);
+  }, [id, playerPosition]);
 
   // Function to happen when colliding with player
   const playerCollision = () => {

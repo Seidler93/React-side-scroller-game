@@ -2,11 +2,13 @@
 import React from 'react';
 import Game from '../src/components/Game';
 import { GameProvider } from './utils/GameContext';
+import Header from './components/header/index.jsx'
 
 const App = () => {
   return (
     <GameProvider>
-      <Game />
+      <Header/>
+      <Game/>
     </GameProvider>
   );
 };

@@ -3,10 +3,6 @@
   position: relative;
   width: 100vw;
   height: 100vh;
-  background: #87CEEB; /* Sky blue background color, you can change it to an image */
+  background-color: #87CEEB; /* Sky blue background color, you can change it to an image */
   background-repeat: repeat-x; /* Repeat the background horizontally */
-}
-
-.game-over {
-  background: #FF6347; /* Lightcoral background color for game over state */
 }

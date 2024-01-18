@@ -1,10 +1,10 @@
 import './enemy.css'
 import { useGame } from '../../utils/GameContext'
 import { useEffect } from 'react';
-import Enemy from './BaseEnemy';
+import Enemy from './Enemy';
 
 export default function Enemies() {
-  const {playerPosition, setPlayerPosition, bullets, setBullets, enemies, setEnemies, setPlayerHealth} = useGame()
+  const {playerPosition, setPlayerPosition, enemies, setEnemies, setPlayerHealth} = useGame()
 
   // Temporary starter enemies
   const preplacedEnemies = [
@@ -26,7 +26,7 @@ export default function Enemies() {
       top: playerPosition.y + 50,
       bottom: playerPosition.y,
     };
-    
+
     // Collision detection
     if (
       playerRect.right >= enemyRect.left &&

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Obstacle from './Obstacle';
 
 export default function Obstacles() {
-  const {playerPosition, setPlayerPosition, bullets, setBullets, enemies, setEnemies, obstacles, setObstacles } = useGame()
+  const {playerPosition, setPlayerPosition, projectiles, setProjectiles, enemies, setEnemies, obstacles, setObstacles } = useGame()
 
   // Temporary starter enemies
   const preplacedObstacles = [
@@ -19,7 +19,7 @@ export default function Obstacles() {
   }, []);
 
   // Preventing player from overlapping an obstacle when collision is detected
-  const collisionCorrection = (playerRef, obstacleRef) => {
+  const playerCollisionCorrection = (playerRef, obstacleRef) => {
     let newX = playerRef.left;
     let newY = playerRef.bottom;
 
@@ -28,35 +28,35 @@ export default function Obstacles() {
       playerRef.right <= obstacleRef.left
     ) {
       newX = playerRef.left - 5
-      return { y: newY, x: newX }
+      setPlayerPosition({ y: newY, x: newX })
     } 
     if (
       playerRef.left <= obstacleRef.right &&
       playerRef.left >= obstacleRef.right
     ) {
       newX = playerRef.left + 5
-      return { y: newY, x: newX }
+      setPlayerPosition({ y: newY, x: newX })
     } 
     if (
       playerRef.bottom <= obstacleRef.top &&
       playerRef.bottom >= obstacleRef.bottom
     ) {
       newY = playerRef.bottom + 5
-      return { y: newY, x: newX }
+      setPlayerPosition({ y: newY, x: newX })
     } 
     if (
       playerRef.top >= obstacleRef.bottom &&
       playerRef.top <= obstacleRef.top
     ) {
       newY = playerRef.bottom - 5
-      return { y: newY, x: newX }
+      setPlayerPosition({ y: newY, x: newX })
     } 
 
-    return { y: newY, x: newX }
+    setPlayerPosition({ y: newY, x: newX })
   }
 
   // Preventing enemy from overlapping an obstacle when collision is detected
-  const enemyCollisionCorrection = (enemyRef, obstacleRef) => {
+  const enemyCollisionCorrection = (enemy, enemyRef, obstacleRef) => {
     let newX = enemyRef.left;
     let newY = enemyRef.bottom;
 
@@ -89,63 +89,128 @@ export default function Obstacles() {
       // return {...enemy, position: { y: newY, x: newX }};
     } 
 
-    return { y: newY, x: newX };
+    const newEnemy = {...enemy, position: { y: newY, x: newX }}
+  
+    return setEnemies((prevEnemies) => {
+      let newEnemies = prevEnemies.filter(enm => enm.id !== newEnemy.id)
+      return [...newEnemies, newEnemy]
+    })
   }
 
   // Handling collision between player and obstacle
   const handleObstacleCollision = (id, obstacleRect) => {
-    setPlayerPosition((prevPlayerPosition) => {
-      let newX = prevPlayerPosition.x;
-      let newY = prevPlayerPosition.y;
+    const playerRect = {
+      left: playerPosition.x,
+      right: playerPosition.x + 50,
+      top: playerPosition.y + 50,
+      bottom: playerPosition.y,
+    };
 
-      const playerRect = {
-        left: prevPlayerPosition.x,
-        right: prevPlayerPosition.x + 50,
-        top: prevPlayerPosition.y + 50,
-        bottom: prevPlayerPosition.y,
+    if (
+      playerRect.right >= obstacleRect.left &&
+      playerRect.left <= obstacleRect.right &&
+      playerRect.bottom <= obstacleRect.top &&
+      playerRect.top >= obstacleRect.bottom
+    ) {
+      playerCollisionCorrection(playerRect, obstacleRect)
+    } 
+
+    for (let i = 0; i < enemies.length; i++) {
+      const enemy = enemies[i];
+
+      const enemyRect = {
+        left: enemy.position.x,
+        right: enemy.position.x + enemy.width, 
+        top: enemy.position.y + enemy.height, 
+        bottom: enemy.position.y, 
       };
 
-      // Collision detection
       if (
-        playerRect.right >= obstacleRect.left &&
-        playerRect.left <= obstacleRect.right &&
-        playerRect.bottom <= obstacleRect.top &&
-        playerRect.top >= obstacleRect.bottom
+        enemyRect.right >= obstacleRect.left &&
+        enemyRect.left <= obstacleRect.right &&
+        enemyRect.bottom <= obstacleRect.top &&
+        enemyRect.top >= obstacleRect.bottom
       ) {
-        return collisionCorrection(playerRect, obstacleRect)
-      } 
-
-      return { y: newY, x: newX };
-    })
-
-    setEnemies((prevEnemies) => {
-      let newEnemies = []
-
-      for (let i = 0; i < prevEnemies.length; i++) {
-        let enemy = prevEnemies[i];
-
-        const enemyRect = {
-          left: enemy.position.x,
-          right: enemy.position.x + enemy.width, 
-          top: enemy.position.y + enemy.height, 
-          bottom: enemy.position.y, 
-        };
-        
-        // Collision detection
-        if (
-          enemyRect.right >= obstacleRect.left &&
-          enemyRect.left <= obstacleRect.right &&
-          enemyRect.bottom <= obstacleRect.top &&
-          enemyRect.top >= obstacleRect.bottom
-        ) {
-          newEnemies = [...newEnemies, {...enemy, position: enemyCollisionCorrection(enemyRect, obstacleRect)}];
-        } else {
-          newEnemies = [...newEnemies, {...enemy, position: enemyCollisionCorrection(enemyRect, obstacleRect)}];
-        }
-
+        // newEnemies = [...newEnemies, {...enemy, position: enemyCollisionCorrection(enemyRect, obstacleRect)}];
+        enemyCollisionCorrection(enemy, enemyRect, obstacleRect)
       }
-      return newEnemies
-    })
+    }
+
+    // setPlayerPosition((prevPlayerPosition) => {
+    //   let newX = prevPlayerPosition.x;
+    //   let newY = prevPlayerPosition.y;
+
+    //   const playerRect = {
+    //     left: prevPlayerPosition.x,
+    //     right: prevPlayerPosition.x + 50,
+    //     top: prevPlayerPosition.y + 50,
+    //     bottom: prevPlayerPosition.y,
+    //   };
+
+    //   // Collision detection
+    //   if (
+    //     playerRect.right >= obstacleRect.left &&
+    //     playerRect.left <= obstacleRect.right &&
+    //     playerRect.bottom <= obstacleRect.top &&
+    //     playerRect.top >= obstacleRect.bottom
+    //   ) {
+    //     return collisionCorrection(playerRect, obstacleRect)
+    //   } 
+
+    //   return { y: newY, x: newX };
+    // })
+
+    // setEnemies((prevEnemies) => {
+    //   let newEnemies = []
+
+    //   for (let i = 0; i < prevEnemies.length; i++) {
+    //     let enemy = prevEnemies[i];
+
+    //     const enemyRect = {
+    //       left: enemy.position.x,
+    //       right: enemy.position.x + enemy.width, 
+    //       top: enemy.position.y + enemy.height, 
+    //       bottom: enemy.position.y, 
+    //     };
+        
+    //     // Collision detection
+    //     if (
+    //       enemyRect.right >= obstacleRect.left &&
+    //       enemyRect.left <= obstacleRect.right &&
+    //       enemyRect.bottom <= obstacleRect.top &&
+    //       enemyRect.top >= obstacleRect.bottom
+    //     ) {
+    //       newEnemies = [...newEnemies, {...enemy, position: enemyCollisionCorrection(enemyRect, obstacleRect)}];
+    //     } else {
+    //       newEnemies = [...newEnemies, {...enemy, position: enemyCollisionCorrection(enemyRect, obstacleRect)}];
+    //     }
+
+    //   }
+    //   return newEnemies
+    // })
+
+    for (let i = 0; i < projectiles.length; i++) {
+      const projectile = projectiles[i];
+
+      const projectileRect = {
+        left: projectile.position.x,
+        right: projectile.position.x + projectile.width, 
+        top: projectile.position.y + projectile.height, 
+        bottom: projectile.position.y, 
+      };
+
+      if (
+        projectileRect.right >= obstacleRect.left &&
+        projectileRect.left <= obstacleRect.right &&
+        projectileRect.bottom <= obstacleRect.top &&
+        projectileRect.top >= obstacleRect.bottom
+      ) {
+        setProjectiles((prevpPojectiles) => {
+          let newProjectiles = prevpPojectiles.filter(proj => proj.id !== projectile.id)
+          return [...newProjectiles]
+        })
+      }
+    }
   };
 
 
