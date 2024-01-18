@@ -4,12 +4,14 @@ import React, { createContext, useContext, useState } from 'react';
 const GameContext = createContext();
 
 export const GameProvider = ({ children }) => {
-  const [playerPosition, setPlayerPosition] = useState(10);
-  const [isJumping, setIsJumping] = useState(false)
-  const [playerSpeed, setPlayerSpeed] = useState(0);
+  const [playerPosition, setPlayerPosition] = useState({x: 300, y: 0});
+  const [bullets, setBullets] = useState([]);
+  const [enemies, setEnemies] = useState([]);
+  const [obstacles, setObstacles] = useState([]);
+  const [playerHealth, setPlayerHealth] = useState(100);
 
   return (
-    <GameContext.Provider value={{ playerPosition, setPlayerPosition, isJumping, setIsJumping, playerSpeed, setPlayerSpeed }}>
+    <GameContext.Provider value={{ playerPosition, setPlayerPosition, bullets, setBullets, enemies, setEnemies, obstacles, setObstacles, playerHealth, setPlayerHealth }}>
       {children}
     </GameContext.Provider>
   );

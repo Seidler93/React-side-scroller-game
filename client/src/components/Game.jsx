@@ -1,25 +1,17 @@
 // Game.js
 import React, { useEffect, useState } from 'react';
 import Player from './player/Player';
-import Obstacle from './obstacle/Obstacle';
 import Bullet from './projectiles/Bullet';
+import Enemies from './enemies/Enemies';
+import { useGame } from '../utils/GameContext';
+import Obstacles from './obstacles/Obstacles';
 
 const Game = () => {
-  const [playerPosition, setPlayerPosition] = useState({x: 300, y: 0});
-  const [isJumping, setIsJumping] = useState(false);
   const [backgroundPosition, setBackgroundPosition] = useState(0);
-  const [bullets, setBullets] = useState([]);
+  const {playerPosition, setPlayerPosition, bullets, setBullets} = useGame()
 
   let xInput = []
   let yInput = []
-
-  const preplacedObstacles = [
-    { id: 1, position: {x: 200, y: 0}, width: 50, height: 50 },
-    { id: 2, position: {x: 400, y: 0}, width: 50, height: 50 },
-    { id: 3, position: {x: 600, y: 100}, width: 50, height: 50 },
-    // Add more obstacles as needed
-  ];
-  const [obstacles, setObstacles] = useState(preplacedObstacles);
 
   const handleKeyDown = (e) => {
     // Handle key events to move the player in y direction
@@ -82,47 +74,10 @@ const Game = () => {
   }, [bullets, playerPosition]);
   
 
-  const collisionCorrection = (playerRef, obstacleRef) => {
-    let newX = playerRef.left;
-    let newY = playerRef.bottom;
-
-    if (
-      playerRef.right >= obstacleRef.left &&
-      playerRef.right <= obstacleRef.left
-    ) {
-      newX = playerRef.left - 5
-      return { y: newY, x: newX }
-    } 
-    if (
-      playerRef.left <= obstacleRef.right &&
-      playerRef.left >= obstacleRef.right
-    ) {
-      newX = playerRef.left + 5
-      return { y: newY, x: newX }
-    } 
-    if (
-      playerRef.bottom <= obstacleRef.top &&
-      playerRef.bottom >= obstacleRef.bottom
-    ) {
-      newY = playerRef.bottom + 5
-      return { y: newY, x: newX }
-    } 
-    if (
-      playerRef.top >= obstacleRef.bottom &&
-      playerRef.top <= obstacleRef.top
-    ) {
-      newY = playerRef.bottom - 5
-      return { y: newY, x: newX }
-    } 
-
-    return { y: newY, x: newX }
-  }
-
   const updatePlayerPosition = () => {    
     setPlayerPosition((prevPlayerPosition) => {
       let newX = prevPlayerPosition.x;
       let newY = prevPlayerPosition.y;
-      // console.log('me', playerRect);
   
       if (xInput.indexOf('d') > -1) {
         newX += 5;
@@ -165,32 +120,6 @@ const Game = () => {
     setBackgroundPosition((prevPosition) => prevPosition - 5);
   }, [playerPosition]);
 
-  const handleObstacleCollision = (id, obstacleRect) => {
-    setPlayerPosition((prevPlayerPosition) => {
-      let newX = prevPlayerPosition.x;
-      let newY = prevPlayerPosition.y;
-
-      const playerRect = {
-        left: prevPlayerPosition.x,
-        right: prevPlayerPosition.x + 50,
-        top: prevPlayerPosition.y + 50,
-        bottom: prevPlayerPosition.y,
-      };
-
-      // Collision detection
-      if (
-        playerRect.right >= obstacleRect.left &&
-        playerRect.left <= obstacleRect.right &&
-        playerRect.bottom <= obstacleRect.top &&
-        playerRect.top >= obstacleRect.bottom
-      ) {
-        return collisionCorrection(playerRect, obstacleRect)
-      } 
-
-      return { y: newY, x: newX };
-    })
-  };
-
   const updateBullet = () => {
     setBullets((prevBullets) => {
       let newBullets = [];
@@ -217,14 +146,13 @@ const Game = () => {
     });
   };
 
-  
-
+  // Tick for updating player movement
   useEffect(() => {
     const interval = setInterval(() => {
       // Check for collision using the ref
      updatePlayerPosition()
      updateBullet()
-    }, 16);
+    }, 14);
     
     return () => {
       clearInterval(interval);
@@ -232,11 +160,10 @@ const Game = () => {
   }, []);
 
   return (
-    <div className="game-container" style={{ backgroundPosition: `${backgroundPosition}px 0` }}>
-      <Player position={playerPosition} isJumping={isJumping}/>
-      {obstacles.map((obstacle) => (
-        <Obstacle key={obstacle.id} id={obstacle.id} position={obstacle.position} width={obstacle.width} height={obstacle.height} handleCollision={handleObstacleCollision} />
-      ))}
+    <div className="game-container">
+      <Player position={playerPosition}/>
+      <Obstacles/>
+      <Enemies/>
       {bullets.map((bullet) => (
         <Bullet key={bullet.id} position={bullet.position} target={bullet.target} />
       ))}
