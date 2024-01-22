@@ -27,25 +27,25 @@ export default function Obstacles() {
       playerRef.right >= obstacleRef.left &&
       playerRef.right <= obstacleRef.left
     ) {
-      newX = playerRef.left - 5;
+      newX = playerRef.left - 2;
     } 
     if (
       playerRef.left <= obstacleRef.right &&
       playerRef.left >= obstacleRef.right
     ) {
-      newX = playerRef.left + 5;
+      newX = playerRef.left + 2;
     } 
     if (
       playerRef.bottom <= obstacleRef.top &&
       playerRef.bottom >= obstacleRef.bottom
     ) {
-      newY = playerRef.bottom + 5;
+      newY = playerRef.bottom + 2;
     } 
     if (
       playerRef.top >= obstacleRef.bottom &&
       playerRef.top <= obstacleRef.top
     ) {
-      newY = playerRef.bottom - 5;
+      newY = playerRef.bottom - 2;
     } 
   
     setPlayerPosition({ x: newX, y: newY });

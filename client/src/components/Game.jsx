@@ -9,7 +9,7 @@ import './game.css'
 
 const Game = () => {
   const [backgroundPosition, setBackgroundPosition] = useState(0);
-  const { playerPosition, setPlayerPosition, projectiles, setProjectiles, obstacles } = useGame()
+  const { level, setLevel, playerPosition, setPlayerPosition, projectiles, setProjectiles, obstacles, enemies, setEnemies } = useGame()
   // console.log(obstacles);
 
   let xInput = []
@@ -76,44 +76,7 @@ const Game = () => {
     return () => {
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [projectiles, playerPosition]);
-
-  const playerCollisionCorrection = (playerRef, obstacleRef) => {
-    let newX = playerRef.left;
-    let newY = playerRef.bottom;
-
-    if (
-      playerRef.right > obstacleRef.left &&
-      playerRef.right < obstacleRef.left
-    ) {
-      newX = playerRef.left - 5
-      console.log('col');
-      return { y: newY, x: newX }
-    } 
-    if (
-      playerRef.left < obstacleRef.right &&
-      playerRef.left > obstacleRef.right
-    ) {
-      newX = playerRef.left + 5
-      return { y: newY, x: newX }
-    } 
-    if (
-      playerRef.bottom < obstacleRef.top &&
-      playerRef.bottom > obstacleRef.bottom
-    ) {
-      newY = playerRef.bottom + 5
-      return { y: newY, x: newX }
-    } 
-    if (
-      playerRef.top > obstacleRef.bottom &&
-      playerRef.top < obstacleRef.top
-    ) {
-      newY = playerRef.bottom - 5
-      return { y: newY, x: newX }
-    } 
-
-    return { y: newY, x: newX }
-  }  
+  }, [projectiles, playerPosition]); 
 
   const updatePlayerPosition = () => {    
     setPlayerPosition((prevPlayerPosition) => {
@@ -121,15 +84,15 @@ const Game = () => {
       let newY = prevPlayerPosition.y;
   
       if (xInput.indexOf('d') > -1) {
-        newX += 5;
+        newX += 2;
       } else if (xInput.indexOf('a') > -1) {
-        newX -= 5;
+        newX -= 2;
       } 
       
       if (yInput.indexOf('w') > -1) {
-        newY += 5
+        newY += 2
       } else if (yInput.indexOf('s') > -1) {
-        newY -= 5;
+        newY -= 2;
       }
 
       const playerRect = {
@@ -139,26 +102,6 @@ const Game = () => {
         bottom: prevPlayerPosition.y,
       }
 
-      // for (let i = 0; i < obstacles.length; i++) {
-      //   const obstacle = obstacles[i];
-  
-      //   const obstacleRect = {
-      //     left: obstacle.position.x,
-      //     right: obstacle.position.x + obstacle.width, 
-      //     top: obstacle.position.y + obstacle.height, 
-      //     bottom: obstacle.position.y, 
-      //   };
-  
-      //   if (
-      //     playerRect.right > obstacleRect.left &&
-      //     playerRect.left < obstacleRect.right &&
-      //     playerRect.bottom < obstacleRect.top &&
-      //     playerRect.top > obstacleRect.bottom
-      //   ) {
-      //     return playerCollisionCorrection(playerRect, obstacleRect)
-      //   } 
-      // }
- 
       if (newX < 0) {
         newX = 0;
       }
@@ -213,13 +156,48 @@ const Game = () => {
     });
   }, [playerPosition]);
 
+  useEffect(() => {
+    updateEnemies()
+    
+  }, [enemies]);
+
+  const updateEnemies = () => {
+    if (enemies.length === 0) {
+      setLevel(prevLevel => prevLevel += 1)
+      // generateEnemies()
+    }
+  }
+
+  const generateEnemies = () => {
+    console.log('enemy');
+    function getRandomInt() {
+      let min = Math.ceil(1);
+      let max = Math.floor(1000);
+
+      // Generate a random integer between min (inclusive) and max (inclusive)
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    const newEnemies = []
+    for (let i = 0; i <= level; i++) {
+      const newEnemy = {
+        id: i, 
+        position: {x: getRandomInt(), y: getRandomInt()}, 
+        width: 50, 
+        height: 50, 
+        health: 100 * i, 
+        class: 'enemy'
+      }
+      newEnemies.push(newEnemy)
+    }
+    setEnemies(newEnemies)
+  }
+
   // Tick for updating player movement
   useEffect(() => {
     const interval = setInterval(() => {
-      // Check for collision using the ref
      updatePlayerPosition()
-    //  updateProjectiles()
-    }, 16);
+    }, 8);
     
     return () => {
       clearInterval(interval);

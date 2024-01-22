@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Enemy from './Enemy';
 
 export default function Enemies() {
-  const {playerPosition, setPlayerPosition, enemies, setEnemies, setPlayerHealth} = useGame()
+  const {level, setLevel, playerPosition, setPlayerPosition, enemies, setEnemies, setPlayerHealth} = useGame()
 
   // Temporary starter enemies
   const preplacedEnemies = [
@@ -37,6 +37,8 @@ export default function Enemies() {
       return playerCollision()
     }
   };
+
+  
 
   return (
     <>

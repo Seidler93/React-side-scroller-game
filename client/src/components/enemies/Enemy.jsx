@@ -1,7 +1,7 @@
 import { useEffect, } from 'react';
 import { useGame } from '../../utils/GameContext';
 
-export default function Enemy({ id, position, height, width, handlePlayerCollision, itemClass, health }) {
+export default function Enemy({ updateEnemies, id, position, height, width, handlePlayerCollision, itemClass, health }) {
   const {playerPosition, setPlayerPosition, bullets, setBullets, setPlayerHealth, enemies, playerHealth, setEnemies} = useGame()
 
   useEffect(() => {
@@ -30,11 +30,12 @@ export default function Enemy({ id, position, height, width, handlePlayerCollisi
       let newEnemies = prevEnemies.filter(enemy => enemy.id !== id)
       return [...newEnemies]
     })
+
   }
 
   const moveTowardsPlayer = () => {
     const angle = Math.atan2(playerPosition.y - position.y, playerPosition.x - position.x);
-    const speed = 3; // Enemy speed
+    const speed = 1; // Enemy speed
 
     const deltaX = speed * Math.cos(angle);
     const deltaY = speed * Math.sin(angle);

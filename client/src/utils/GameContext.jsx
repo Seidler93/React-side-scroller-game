@@ -9,9 +9,10 @@ export const GameProvider = ({ children }) => {
   const [enemies, setEnemies] = useState([]);
   const [obstacles, setObstacles] = useState([]);
   const [playerHealth, setPlayerHealth] = useState(100);
+  const [level, setLevel] = useState(1);
 
   return (
-    <GameContext.Provider value={{ playerPosition, setPlayerPosition, projectiles, setProjectiles, enemies, setEnemies, obstacles, setObstacles, playerHealth, setPlayerHealth }}>
+    <GameContext.Provider value={{ level, setLevel, playerPosition, setPlayerPosition, projectiles, setProjectiles, enemies, setEnemies, obstacles, setObstacles, playerHealth, setPlayerHealth }}>
       {children}
     </GameContext.Provider>
   );
