@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState } from 'react';
 const GameContext = createContext();
 
 export const GameProvider = ({ children }) => {
-  const [playerPosition, setPlayerPosition] = useState({x: 300, y: 0});
+  const [playerPosition, setPlayerPosition] = useState({x: window.innerWidth / 2, y: window.innerHeight / 2});
   const [projectiles, setProjectiles] = useState([]);
   const [enemies, setEnemies] = useState([]);
   const [obstacles, setObstacles] = useState([]);

@@ -1,8 +1,16 @@
 /* game.css */
+
 .game-container {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  background-color: #87CEEB; /* Sky blue background color, you can change it to an image */
-  background-repeat: repeat-x; /* Repeat the background horizontally */
+  overflow: hidden; /* Ensure that elements outside the container are hidden */
 }
+
+canvas {
+  display: block; /* Make sure the canvas behaves as a block element */
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Add other styles as needed for your game elements */
+

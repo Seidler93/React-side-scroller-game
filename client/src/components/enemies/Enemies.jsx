@@ -15,7 +15,7 @@ export default function Enemies() {
 
   // Set global enemies to the starter enemies
   useEffect(() => {
-    setEnemies(preplacedEnemies)
+    // setEnemies(preplacedEnemies)
   }, []);
 
   // Handling collision between enemy and obstacle
@@ -37,8 +37,6 @@ export default function Enemies() {
       return playerCollision()
     }
   };
-
-  
 
   return (
     <>
