@@ -8,12 +8,13 @@ export const GameProvider = ({ children }) => {
   const [projectiles, setProjectiles] = useState([]);
   const [enemies, setEnemies] = useState([]);
   const [obstacles, setObstacles] = useState([]);
-  const [playerHealth, setPlayerHealth] = useState(100);
+  const [playerHealth, setPlayerHealth] = useState(10000);
+  const [maxPlayerHealth, setMaxPlayerHealth] = useState(10000);
   const [level, setLevel] = useState(1);
   const [gameState, setGameState] = useState(true);
 
   return (
-    <GameContext.Provider value={{ gameState, setGameState, level, setLevel, playerPosition, setPlayerPosition, projectiles, setProjectiles, enemies, setEnemies, obstacles, setObstacles, playerHealth, setPlayerHealth }}>
+    <GameContext.Provider value={{ maxPlayerHealth, setMaxPlayerHealth, gameState, setGameState, level, setLevel, playerPosition, setPlayerPosition, projectiles, setProjectiles, enemies, setEnemies, obstacles, setObstacles, playerHealth, setPlayerHealth }}>
       {children}
     </GameContext.Provider>
   );

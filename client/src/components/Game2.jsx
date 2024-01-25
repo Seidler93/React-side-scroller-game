@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useGame } from '../utils/GameContext';
 import './game.css'
 import Canvas from './Canvas';
+import Header from './header';
+import Healthbar from './player/Healthbar';
 
 const Game = () => {
   const { 
@@ -465,13 +467,17 @@ const Game = () => {
   }, [gameState]);
 
   return (
-    <Canvas
-      playerPosition={playerPosition}
-      obstacles={obstacles}
-      enemies={enemies}
-      projectiles={projectiles}
-      mousePosition={mousePosition}
-    />
+    <>
+      <Header/>
+      <Healthbar/>
+      <Canvas
+        playerPosition={playerPosition}
+        obstacles={obstacles}
+        enemies={enemies}
+        projectiles={projectiles}
+        mousePosition={mousePosition}
+      />
+    </>
   );
 };
 

@@ -22,3 +22,27 @@
     bottom: 0; /* Back to the ground */
   }
 }
+
+/* HealthBar.css */
+.health-bar {
+  position: fixed;
+  top: 50px;
+  left: 10px;
+  width: 200px;
+  z-index: 10;
+}
+
+.health-bar-outer {
+  border: 2px solid black;
+  width: 100%;
+  height: 20px;
+  background-color: #ddd; /* Outer border color */
+  border-radius: 10px;
+  overflow: hidden; /* Hide overflowing content (inner bar) */
+}
+
+.health-bar-inner {
+  height: 100%;
+  background-color: #4caf50; /* Inner bar color */
+  border-radius: 8px; /* Adjust based on your design preference */
+}
