@@ -333,7 +333,16 @@ import './game.css'
 import Canvas from './Canvas';
 
 const Game = () => {
-  const { gameState, setGameState, level, setLevel, playerPosition, setPlayerPosition, projectiles, setProjectiles, obstacles, setObstacles, enemies, setEnemies } = useGame()
+  const { 
+    gameState, setGameState, 
+    level, setLevel, 
+    playerPosition, setPlayerPosition, 
+    projectiles, setProjectiles, 
+    obstacles, setObstacles, 
+    enemies, setEnemies, 
+    playerHealth, setPlayerHealth 
+  } = useGame()
+
   const [changeX, setChangeX] = useState(0)
   const [changeY, setChangeY] = useState(0)
 
@@ -388,17 +397,17 @@ const Game = () => {
     });
 
     if (xInput.indexOf('d') > -1) {
-      setChangeX(2.5);
+      setChangeX(1);
     } else if (xInput.indexOf('a') > -1) {
-      setChangeX(-2.5);
+      setChangeX(-1);
     } else {
       setChangeX(0)
     }
 
     if (yInput.indexOf('w') > -1) {
-      setChangeY(-2.5);
+      setChangeY(-1);
     } else if (yInput.indexOf('s') > -1) {
-      setChangeY(2.5);
+      setChangeY(1);
     } else {
       setChangeY(0)
     }
@@ -414,11 +423,11 @@ const Game = () => {
       bottom: playerPosition.y + 20.5,
     };
 
+    // Initialize collision variable
+    let hasCollision = false
+
     // Update obstacles
     setObstacles((prevObstacles) => {
-      // Initialize collision variable
-      let hasCollision = false
-
       // Check for collisions with all obstacles
       for (let i = 0; i < obstacles.length; i++) {
         let obstacle = obstacles[i];
@@ -440,7 +449,6 @@ const Game = () => {
           playerRect.top < obstacleRect.bottom
         ) {
           // Collision detected
-          console.log(obstacle.id);
           hasCollision = true;
           break;
         }
@@ -458,33 +466,146 @@ const Game = () => {
       } else {
         return prevObstacles
       }
-    })
+    });
 
     // Update enemy positions
-    setEnemies((prevEnemies) =>
-      prevEnemies.map((enemy) => ({
-        ...enemy,
-        position: {
-          x: enemy.position.x - changeX,
-          y: enemy.position.y - changeY,
-        },
-      }))
-    );
+    setEnemies((prevEnemies) => {
+      // Check for collisions with all enemies
+      for (let i = 0; i < enemies.length; i++) {
+        let enemy = enemies[i];
+
+        // Create boundary for obstacle
+        let enemyRect = {
+          left: enemy.position.x - changeX,
+          right: enemy.position.x + enemy.width - changeX,
+          top: enemy.position.y - changeY,
+          bottom: enemy.position.y + enemy.height - changeY,
+        };
+
+        // console.log(enemyRect, playerRect);
+        // Check if the player is colliding with the object
+        if (
+          playerRect.right > enemyRect.left &&
+          playerRect.left < enemyRect.right &&
+          playerRect.bottom > enemyRect.top &&
+          playerRect.top < enemyRect.bottom
+        ) {
+          // Collision detected
+          playerCollision()
+        }
+      }
+
+      // If no collision, update other obstacles positions
+      if (!hasCollision) {
+        return prevEnemies.map((enemy) => ({
+          ...enemy,
+          position: {
+            x: enemy.position.x - changeX,
+            y: enemy.position.y - changeY,
+          },
+        }))
+      } else {
+        return prevEnemies
+      }
+    });
+
 
     // Update projectiles positions
-    setProjectiles((prevProjectiles) =>
-      prevProjectiles.map((projectile) => ({
-        ...projectile,
-        position: {
-          x: projectile.position.x - changeX,
-          y: projectile.position.y - changeY,
-        },
-      }))
-    );
+    if (!hasCollision) {
+      setProjectiles((prevProjectiles) => {
+        return prevProjectiles.map((projectile) => ({
+          ...projectile,
+          position: {
+            x: projectile.position.x - changeX,
+            y: projectile.position.y - changeY,
+          },
+        }))
+      });
+    }
   }, [changeX, changeY, playerPosition])
 
-  
-  
+  function checkProjectileCollision() {
+    for (let i = 0; i < projectiles.length; i++) {
+      let projectile = projectiles[i];
+
+      // Create boundary for projectile
+      let projectileRect = {
+        left: projectile.position.x,
+        right: projectile.position.x + projectile.width,
+        top: projectile.position.y,
+        bottom: projectile.position.y + projectile.height,
+      };
+
+      for (let i = 0; i < enemies.length; i++) {
+        let enemy = enemies[i];
+
+        // Create boundary for enemy
+        let enemyRect = {
+          left: enemy.position.x,
+          right: enemy.position.x + enemy.width,
+          top: enemy.position.y,
+          bottom: enemy.position.y + enemy.height,
+        };
+
+        // Check if the projectile is colliding with the enemy
+        if (
+          projectileRect.right > enemyRect.left &&
+          projectileRect.left < enemyRect.right &&
+          projectileRect.bottom > enemyRect.top &&
+          projectileRect.top < enemyRect.bottom
+        ) {
+          // Collision detected
+          enemyHit(projectile, enemy)
+          break
+        }
+      }
+
+      for (let i = 0; i < obstacles.length; i++) {
+        let obstacle = obstacles[i];
+
+        // Create boundary for enemy
+        let obstacleRect = {
+          left: obstacle.position.x,
+          right: obstacle.position.x + obstacle.width,
+          top: obstacle.position.y,
+          bottom: obstacle.position.y + obstacle.height,
+        };
+
+        // Check if the projectile is colliding with the enemy
+        if (
+          projectileRect.right > obstacleRect.left &&
+          projectileRect.left < obstacleRect.right &&
+          projectileRect.bottom > obstacleRect.top &&
+          projectileRect.top < obstacleRect.bottom
+        ) {
+          // Collision detected
+          obstacleHit(projectile)
+          break
+        }
+      }
+    }
+  }
+
+  function enemyHit(projectile, enemy) {
+    setProjectiles((prevProjectiles) => {
+      let newProjectiles = prevProjectiles.filter(proj => proj.id !== projectile.id);
+      return [...newProjectiles];
+    });
+
+    setEnemies((prevEnemies) => {
+      let newEnemies = prevEnemies.filter(enm => enm.id !== enemy.id)
+      console.log(enemy.health - 25);
+      return [...newEnemies, {...enemy, health: (enemy.health - 25)}]
+    })
+  }
+
+  function obstacleHit(projectile) {
+    setProjectiles((prevpPojectiles) => {
+      let newProjectiles = prevpPojectiles.filter(proj => proj.id !== projectile.id)
+      return [...newProjectiles]
+    })
+  }
+
   const handleMouseDown = (e) => {
     if (e.button === 0) {
       // Get the mouse position relative to the viewport
@@ -539,13 +660,17 @@ const Game = () => {
       }
       return newProjectiles;
     });
-  }, [playerPosition]);  
+  }, [playerPosition]);
+  
+  useEffect(() => {
+    checkProjectileCollision()
+  }, [projectiles])
 
   useEffect(() => {
     for (let i = 0; i < enemies.length; i++) {
       let enemy = enemies[i];
       // Check if enemy is dead
-      enemy.health <= 0 && handleDeath()
+      enemy.health <= 0 && handleDeath(enemy)
       const enemyRect = {
         left: enemy.position.x,
         right: enemy.position.x + enemy.width, 
@@ -565,12 +690,11 @@ const Game = () => {
     console.log(playerHealth - 1);
   }
 
-  const handleDeath = () => {
+  const handleDeath = (enemy) => {
     setEnemies((prevEnemies) => {
-      let newEnemies = prevEnemies.filter(enemy => enemy.id !== id)
+      let newEnemies = prevEnemies.filter(enm => enm.id !== enemy.id)
       return [...newEnemies]
     })
-
   }
 
   const moveTowardsPlayer = (enemy) => {
@@ -599,7 +723,7 @@ const Game = () => {
 
       const interval = setInterval(() => {
         updatePlayerMovement();
-      }, 14);
+      }, 4);
 
       return () => {
         window.removeEventListener('keydown', handleKeyDown);
@@ -609,7 +733,6 @@ const Game = () => {
       };
     }
   }, [gameState]);
-
 
   return (
     <Canvas
