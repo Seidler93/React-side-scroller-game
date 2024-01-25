@@ -16,6 +16,16 @@ const Game = () => {
 
   const [changeX, setChangeX] = useState(0)
   const [changeY, setChangeY] = useState(0)
+  const [beginningNextLevel, setBeginningNextLevel] = useState(false)
+  const [initiation, setInitiation] = useState(true)
+
+  function initialTimer() {
+    setTimeout(() => {
+      setInitiation(false)
+    }, 500);
+  }
+
+  initialTimer()
 
   // Temporary starter obstacles
   const preplacedObstacles = [
@@ -26,9 +36,9 @@ const Game = () => {
 
   // Temporary starter enemies
   const preplacedEnemies = [
-    { id: 1, position: {x: 200, y: 400}, width: 50, height: 50, health: 100, class: 'enemy' },
-    { id: 2, position: {x: 400, y: 400}, width: 50, height: 50, health: 100, class: 'enemy' },
-    { id: 3, position: {x: 600, y: 100}, width: 50, height: 50, health: 100, class: 'enemy' },
+    { id: 1, position: {x: 200, y: 400}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
+    { id: 2, position: {x: 400, y: 400}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
+    { id: 3, position: {x: 600, y: 100}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
   ];
 
   // Set global enemies and obstacles to the starter enemies
@@ -373,6 +383,55 @@ const Game = () => {
       );
     });
   };
+
+  useEffect(() => {
+    if (!beginningNextLevel) {
+      updateEnemies()
+    }
+  }, [enemies]);
+  
+  function timer() {
+    setTimeout(() => {
+      setBeginningNextLevel(false)
+    }, 5000);
+  }
+  
+  const updateEnemies = () => {
+    if (enemies.length === 0 && !initiation) {
+      setBeginningNextLevel(true)
+      timer()
+      setLevel(prevLevel => prevLevel += 1)
+      setTimeout(() => {
+        generateEnemies();
+      }, 2000);
+    }
+  }
+
+  const generateEnemies = () => {
+    console.log('enemy');
+    function getRandomInt() {
+      let min = Math.ceil(1);
+      let max = Math.floor(1000);
+
+      // Generate a random integer between min and max
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    const newEnemies = []
+    for (let i = 0; i <= level; i++) {
+      const newEnemy = {
+        id: i, 
+        position: {x: getRandomInt(), y: getRandomInt()}, 
+        width: 50, 
+        height: 50, 
+        health: 100 * level,
+        maxHealth: 100 * level,
+        class: 'enemy'
+      }
+      newEnemies.push(newEnemy)
+    }
+    setEnemies(newEnemies)
+  }
   
   useEffect(() => {
     if (gameState) {

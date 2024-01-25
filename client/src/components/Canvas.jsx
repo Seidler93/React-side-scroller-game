@@ -1,5 +1,6 @@
 // Canvas.jsx
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useGame } from '../utils/GameContext';
 
 const Canvas = ({
   playerPosition,
@@ -7,6 +8,11 @@ const Canvas = ({
   enemies,
   projectiles,  
 }) => {
+  const { 
+    level, setLevel,
+    playerHealth, setPlayerHealth 
+  } = useGame()
+
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -28,9 +34,7 @@ const Canvas = ({
       // console.log('Drawing Obstacles', obstacles);
       context.fillStyle = 'green';
       obstacles.forEach((obstacle) => {
-        const adjustedObstacleX = obstacle.position.x;
-        const adjustedObstacleY = obstacle.position.y;
-        context.fillRect(adjustedObstacleX, adjustedObstacleY, obstacle.width, obstacle.height);
+        context.fillRect(obstacle.position.x, obstacle.position.y, obstacle.width, obstacle.height);
       });
     };
 
@@ -42,9 +46,9 @@ const Canvas = ({
         context.fillRect(enemy.position.x, enemy.position.y, enemy.width, enemy.height);
       
         // Draw the health bar
-        context.fillStyle = 'green'; // Adjust color as needed
+        context.fillStyle = 'green';
         const healthBarHeight = 5;
-        const healthBarWidth = (enemy.health / 100) * 50; // Adjust based on your health range
+        const healthBarWidth = (enemy.health / enemy.maxHealth) * 50; // Adjust based on your health range
         const healthBarY = enemy.position.y - healthBarHeight - 5; // Adjust distance from the enemy
         context.fillRect(enemy.position.x, healthBarY, healthBarWidth, healthBarHeight);
       });
@@ -64,10 +68,10 @@ const Canvas = ({
         // Rotate the canvas to match the projectile's angle
         context.rotate(projectile.angle);
         
-        // Draw the projectile (line in this case)
+        // Draw the projectile
         context.beginPath();
         context.moveTo(0, 0);
-        context.lineTo(15, 0); // Increase the length for more visibility
+        context.lineTo(15, 0);
         context.stroke();
         
         context.restore(); // Restore the saved state to prevent the rotation affecting other drawings
@@ -99,7 +103,7 @@ const Canvas = ({
       ref={canvasRef} 
       width={window.innerWidth} 
       height={window.innerHeight} 
-      style={{ backgroundColor: 'lightgrey' }} // Adjust the color as needed
+      style={{ backgroundColor: 'lightgrey' }}
     />
   );
 };
