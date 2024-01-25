@@ -36,12 +36,17 @@ const Canvas = ({
 
     // Draw enemies
     const drawEnemies = () => {
-      // console.log('Drawing Enemies', enemies);
-      context.fillStyle = 'red';
       enemies.forEach((enemy) => {
-        const adjustedEnemyX = enemy.position.x;
-        const adjustedEnemyY = enemy.position.y;
-        context.fillRect(adjustedEnemyX, adjustedEnemyY, enemy.width, enemy.height);
+        // Draw the enemy
+        context.fillStyle = 'red';
+        context.fillRect(enemy.position.x, enemy.position.y, enemy.width, enemy.height);
+      
+        // Draw the health bar
+        context.fillStyle = 'green'; // Adjust color as needed
+        const healthBarHeight = 5;
+        const healthBarWidth = (enemy.health / 100) * 50; // Adjust based on your health range
+        const healthBarY = enemy.position.y - healthBarHeight - 5; // Adjust distance from the enemy
+        context.fillRect(enemy.position.x, healthBarY, healthBarWidth, healthBarHeight);
       });
     };
 
