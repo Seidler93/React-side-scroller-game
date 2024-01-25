@@ -19,6 +19,14 @@ const Game = () => {
   const [beginningNextLevel, setBeginningNextLevel] = useState(false)
   const [initiation, setInitiation] = useState(true)
 
+  // Assuming you have a state to store mouse coordinates
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Update mouse coordinates on mouse move
+  const handleMouseMove = (e) => {
+    setMousePosition({ x: e.clientX, y: e.clientY });
+  };
+
   function initialTimer() {
     setTimeout(() => {
       setInitiation(false)
@@ -439,6 +447,7 @@ const Game = () => {
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
       window.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mousemove', handleMouseMove);
 
       const interval = setInterval(() => {
         updatePlayerMovement();
@@ -448,6 +457,8 @@ const Game = () => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
         window.removeEventListener('mousedown', handleMouseDown);
+        window.removeEventListener('mousemove', handleMouseMove);
+
         clearInterval(interval);
       };
     }
@@ -459,6 +470,7 @@ const Game = () => {
       obstacles={obstacles}
       enemies={enemies}
       projectiles={projectiles}
+      mousePosition={mousePosition}
     />
   );
 };
