@@ -16,6 +16,7 @@ const Game = () => {
     obstacles, setObstacles, 
     enemies, setEnemies, 
     playerHealth, setPlayerHealth,
+    maxPlayerHealth, setMaxPlayerHealth,
     gameOver, setGameOver,
     gameStats, setGameStats
   } = useGame()
@@ -26,6 +27,9 @@ const Game = () => {
   const [initiation, setInitiation] = useState(true)
   const [canShoot, setCanShoot] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [playerSpeed, setPlayerSpeed] = useState(1);
+  const [loot, setLoot] = useState([]);
+
 
   // Update mouse coordinates on mouse move
   const handleMouseMove = (e) => {
@@ -40,22 +44,46 @@ const Game = () => {
 
   // Temporary starter obstacles
   const preplacedObstacles = [
-    { id: 1, position: {x: 100, y: 500}, width: 100, height: 250, health: 100, class: 'obstacle' },
-    { id: 2, position: {x: 1200, y: 300}, width: 150, height: 150, health: 100, class: 'obstacle' },
-    { id: 3, position: {x: 900, y: 100}, width: 150, height: 150, health: 100, class: 'obstacle' },
+    // Outer walls
+    { id: 1, position: { x: 100, y: -700 }, width: 50, height: 3000, health: 100, class: 'obstacle' },
+    { id: 2, position: { x: 100, y: -700 }, width: 3000, height: 50, health: 100, class: 'obstacle' },
+    { id: 3, position: { x: 3100, y: -700 }, width: 50, height: 3000, health: 100, class: 'obstacle' },
+    { id: 4, position: { x: 100, y: 2300 }, width: 3000, height: 50, health: 100, class: 'obstacle' },
+  
+    // Inner walls
+    { id: 5, position: { x: 400, y: -300 }, width: 50, height: 1050, health: 100, class: 'obstacle' },
+    { id: 6, position: { x: 300, y: 0 }, width: 550, height: 50, health: 100, class: 'obstacle' },
+    { id: 7, position: { x: 1200, y: 100 }, width: 400, height: 50, health: 100, class: 'obstacle' },
+  
+    // Additional rooms and obstacles
+    { id: 8, position: { x: 600, y: -500 }, width: 200, height: 50, health: 100, class: 'obstacle' },
+    { id: 9, position: { x: 1000, y: -200 }, width: 50, height: 400, health: 100, class: 'obstacle' },
+    { id: 10, position: { x: 800, y: 200 }, width: 300, height: 50, health: 100, class: 'obstacle' },
+    { id: 11, position: { x: 1200, y: -400 }, width: 50, height: 250, health: 100, class: 'obstacle' },
+    { id: 12, position: { x: 1400, y: 300 }, width: 50, height: 200, health: 100, class: 'obstacle' },
+  
+    // More rooms
+    { id: 13, position: { x: 1600, y: -200 }, width: 50, height: 400, health: 100, class: 'obstacle' },
+    { id: 14, position: { x: 1800, y: 0 }, width: 300, height: 50, health: 100, class: 'obstacle' },
+    { id: 15, position: { x: 1600, y: 200 }, width: 50, height: 400, health: 100, class: 'obstacle' },
   ];
-
+  
   // Temporary starter enemies
   const preplacedEnemies = [
     { id: 1, position: {x: 200, y: 300}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
-    { id: 2, position: {x: 400, y: 700}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
+    { id: 2, position: {x: 800, y: 700}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
     { id: 3, position: {x: 600, y: 100}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
   ];
+
+  const placedLoot = [
+    { id: 500, position: {x: 600, y: 500}, width: 50, height: 50, type: 'health pot' },
+  ]
 
   // Set global enemies and obstacles to the starter enemies
   useEffect(() => {
     setEnemies(preplacedEnemies)
     setObstacles(preplacedObstacles)
+    setLoot(placedLoot)
     initialTimer()
     setGameState(true)
   }, []);
@@ -72,7 +100,7 @@ const Game = () => {
       xInput.push(e.key);
     }
 
-    if (e.key === 'Tab') {
+    if (e.key === 'Tab' || e.key === 'Escape') {
       setGameState(!gameState)
     }
   };
@@ -95,17 +123,17 @@ const Game = () => {
     });
 
     if (xInput.indexOf('d') > -1) {
-      setChangeX(1);
+      setChangeX(playerSpeed);
     } else if (xInput.indexOf('a') > -1) {
-      setChangeX(-1);
+      setChangeX(-playerSpeed);
     } else {
       setChangeX(0)
     }
 
     if (yInput.indexOf('w') > -1) {
-      setChangeY(-1);
+      setChangeY(-playerSpeed);
     } else if (yInput.indexOf('s') > -1) {
-      setChangeY(1);
+      setChangeY(playerSpeed);
     } else {
       setChangeY(0)
     }
@@ -165,59 +193,91 @@ const Game = () => {
       }
     });
 
+    // Check for collisions with all enemies
+    for (let i = 0; i < enemies.length; i++) {
+      let enemy = enemies[i];
+
+      // Create boundary for obstacle
+      let enemyRect = {
+        left: enemy.position.x - changeX,
+        right: enemy.position.x + enemy.width - changeX,
+        top: enemy.position.y - changeY,
+        bottom: enemy.position.y + enemy.height - changeY,
+      };
+
+      // Check if the player is colliding with the object
+      if (
+        playerRect.right > enemyRect.left &&
+        playerRect.left < enemyRect.right &&
+        playerRect.bottom > enemyRect.top &&
+        playerRect.top < enemyRect.bottom
+      ) {
+        // Collision detected
+        playerCollision()
+      }
+    }
+
+    
+
     // Update enemy positions
-    setEnemies((prevEnemies) => {
+    setLoot((prevLoot) => {
       // Check for collisions with all enemies
-      for (let i = 0; i < enemies.length; i++) {
-        let enemy = enemies[i];
+      for (let i = 0; i < loot.length; i++) {
+        let lootObject = loot[i];
 
         // Create boundary for obstacle
-        let enemyRect = {
-          left: enemy.position.x - changeX,
-          right: enemy.position.x + enemy.width - changeX,
-          top: enemy.position.y - changeY,
-          bottom: enemy.position.y + enemy.height - changeY,
+        let lootRect = {
+          left: lootObject.position.x - changeX,
+          right: lootObject.position.x + lootObject.width - changeX,
+          top: lootObject.position.y - changeY,
+          bottom: lootObject.position.y + lootObject.height - changeY,
         };
 
         // Check if the player is colliding with the object
         if (
-          playerRect.right > enemyRect.left &&
-          playerRect.left < enemyRect.right &&
-          playerRect.bottom > enemyRect.top &&
-          playerRect.top < enemyRect.bottom
+          playerRect.right > lootRect.left &&
+          playerRect.left < lootRect.right &&
+          playerRect.bottom > lootRect.top &&
+          playerRect.top < lootRect.bottom
         ) {
           // Collision detected
-          playerCollision()
+          console.log('pot');
+          lootCollision()
         }
       }
 
+      console.log(hasCollision);
       // If no collision, update other obstacles positions
       if (!hasCollision) {
-        return prevEnemies.map((enemy) => ({
-          ...enemy,
+        updateEnemyPosition()
+        return prevLoot.map((lootObject) => ({
+          ...lootObject,
           position: {
-            x: enemy.position.x - changeX,
-            y: enemy.position.y - changeY,
+            x: lootObject.position.x - changeX,
+            y: lootObject.position.y - changeY,
           },
         }))
       } else {
-        return prevEnemies
+        return prevLoot
       }
     });
 
-    // Update projectiles positions
-    if (!hasCollision) {
-      setProjectiles((prevProjectiles) => {
-        return prevProjectiles.map((projectile) => ({
-          ...projectile,
-          position: {
-            x: projectile.position.x - changeX,
-            y: projectile.position.y - changeY,
-          },
-        }))
-      });
-    }
-  }, [changeX, changeY, playerPosition])
+    
+
+  }, [playerPosition])
+
+  // Update enemy positions
+  const updateEnemyPosition = () => {
+    setEnemies((prevEnemies) => {
+      return prevEnemies.map((enemy) => ({
+        ...enemy,
+        position: {
+          x: enemy.position.x - changeX,
+          y: enemy.position.y - changeY,
+        },
+      }));
+    });
+  }
 
   function checkProjectileCollision() {
     for (let i = 0; i < projectiles.length; i++) {
@@ -299,6 +359,16 @@ const Game = () => {
       let newProjectiles = prevpPojectiles.filter(proj => proj.id !== projectile.id)
       return [...newProjectiles]
     })
+  }
+
+  const lootCollision = () => {
+    // Calculate the amount to increase by 20%
+    const increaseAmount = maxPlayerHealth * 0.2;
+
+    // Update player health, ensuring it doesn't exceed maxPlayerHealth
+    const newPlayerHealth = Math.min(playerHealth + increaseAmount, maxPlayerHealth);
+    console.log(newPlayerHealth);
+    setPlayerHealth(newPlayerHealth)
   }
 
   const fireWeapon = () => {
@@ -401,7 +471,7 @@ const Game = () => {
   // Function to happen when colliding with player
   const playerCollision = () => {
     setPlayerHealth(prevPlayerHealth => prevPlayerHealth - 20)
-    console.log(playerHealth - 1);
+    // console.log(playerHealth - 1);
   }
 
   // Handle enemy death
@@ -410,6 +480,19 @@ const Game = () => {
     setEnemies((prevEnemies) => {
       let newEnemies = prevEnemies.filter(enm => enm.id !== enemy.id)
       return [...newEnemies]
+    })
+
+    function fiftyPercentChance() {
+      return Math.random() < 0.5;
+    }
+
+    setLoot((prevLoot) => {
+      if (fiftyPercentChance()) {
+        console.log(true);
+        return [{...prevLoot, position: enemy.position, type: 'health pot' }]
+      } else {
+        return prevLoot
+      }
     })
 
     // Add a kill to kill stats
@@ -528,6 +611,7 @@ const Game = () => {
         projectiles={projectiles}
         isShooting={isShooting}
         mousePosition={mousePosition}
+        loot={loot}
       />
     </>
   );

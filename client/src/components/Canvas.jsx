@@ -11,6 +11,7 @@ const Canvas = ({
   projectiles,
   mousePosition,
   isShooting,
+  loot
 }) => {
   const {gameState, level, setLevel, playerHealth, setPlayerHealth,} = useGame();
   const canvasRef = useRef(null);
@@ -78,7 +79,7 @@ const Canvas = ({
     
     const drawObstacles = () => {
       // Draw obstacles
-      context.fillStyle = 'green';
+      context.fillStyle = 'black';
       obstacles.forEach((obstacle) => {
         context.fillRect(obstacle.position.x, obstacle.position.y, obstacle.width, obstacle.height);
       });
@@ -211,6 +212,52 @@ const Canvas = ({
       context.fill();
     };
 
+    const drawLoot = () => {
+      loot.forEach((lootObject) => {
+        switch (lootObject.type) {
+          case 'health pot':
+            drawHealthPot(lootObject);
+            break;
+        
+          case 'square':
+            // Code to handle a square object
+            // console.log('Handling a square object');
+            break;
+        
+          case 'triangle':
+            // Code to handle a triangle object
+            // console.log('Handling a triangle object');
+            break;
+        
+          default:
+            // Code to handle other types or a default case
+            // console.log('Handling other object types');
+            break;
+        }
+      });
+    }
+
+    const drawHealthPot = (healthPot) => {
+      // Save the current state of the canvas
+      context.save();
+    
+      // Move the canvas origin to the player's position
+      context.translate(healthPot.position.x, healthPot.position.y);
+    
+      // Calculate vertical offset based on time
+      const yOffset = Math.sin(Date.now() * 0.002) * 5; // Adjust the multiplier for speed
+
+      // Draw a 25px circle at the player's position with vertical offset
+      context.beginPath();
+      context.arc(0, yOffset, 12.5, 0, 2 * Math.PI); // Radius is half of the desired size (25 / 2)
+      context.fillStyle = 'red'; // Set the color as needed
+      context.fill();
+
+      // Restore the saved state to prevent affecting other drawings
+      context.restore();
+    }
+    
+
     const updateCanvas = () => {
       // Clear the canvas before drawing updated elements
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -221,6 +268,7 @@ const Canvas = ({
       drawObstacles();
       drawEnemies();
       drawPlayerCircle();
+      drawLoot()
 
       // Draw muzzle flash
       if (isShooting) {
