@@ -1,5 +1,0 @@
-# For development
-web: npm run dev
-
-# For production (assuming you are using Vite to build)
-web: npm run build && npm run preview
