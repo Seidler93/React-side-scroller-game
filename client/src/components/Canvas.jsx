@@ -2,18 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../utils/GameContext';
 import playerImageSrc from '../assets/Skins.png';
 import weaponImageSrc from '../assets/Weapons.png';
+import gunShotSrc from '../assets/GunShot.png';
 
 const Canvas = ({
   playerPosition,
   obstacles,
   enemies,
   projectiles,
-  mousePosition
+  mousePosition,
+  isShooting,
 }) => {
-  const { level, setLevel, playerHealth, setPlayerHealth } = useGame();
+  const {gameState, level, setLevel, playerHealth, setPlayerHealth,} = useGame();
   const canvasRef = useRef(null);
   const playerImageRef = useRef(new Image());
   const weaponImageRef = useRef(new Image());
+  const gunShotImgRef = useRef(new Image())
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,35 +28,52 @@ const Canvas = ({
     const drawPlayer = () => {
       // Save the current state of the canvas
       context.save();
-  
+    
       // Move the canvas origin to the center of the player
       context.translate(playerPosition.x, playerPosition.y);
-  
+    
       // Rotate the canvas
       const angleToMouse = Math.atan2(mousePosition.y - playerPosition.y, mousePosition.x - playerPosition.x);
-      context.rotate(angleToMouse + 4.75);
-  
-      // Draw backpack
-      context.drawImage(
-        playerImageRef.current, 55, 100, 200, 200, -30, -38, 62, 62);
+      context.rotate(angleToMouse + 4.9);
     
-      // Draw the arms
-      context.drawImage(
-        playerImageRef.current, 500, 100, 380, 380, -40, -8, 90, 90);
+      // Draw components
+      drawRightArm();
+      drawLeftArm();
+      drawGun();
+      drawBackpack();
+      drawHead();
     
-      // Draw the head
-      context.drawImage(
-        playerImageRef.current, 256, 100, 200, 200, -25, -8, 50, 50);
-  
-      // Rotate the canvas
-      const weaponAngleInRadians = 6.1;
-      context.rotate(weaponAngleInRadians);
-  
-      // Draw the gun
-      context.drawImage(weaponImageRef.current, 856, 400, 400, 400, -100, -20, 100, 100);
-  
       // Restore the saved state to prevent the rotation affecting other drawings
       context.restore();
+    };
+    
+    const drawBackpack = () => {
+      context.drawImage(
+        playerImageRef.current, 55, 100, 200, 200, -12, -38, 49, 49);
+    };
+    
+    const drawRightArm = () => {
+      context.drawImage(
+        playerImageRef.current, 450, 145, 215, 215, -37, -20, 60, 65);
+    };
+    
+    const drawLeftArm = () => {
+      context.drawImage(
+        playerImageRef.current, 625, 135, 300, 280, -7, -10, 70, 70);
+      };
+    
+    const drawHead = () => {
+      context.drawImage(
+        playerImageRef.current, 256, 100, 200, 200, -7, -8, 40, 40);
+    };
+    
+    const drawGun = () => {
+      // Rotate the canvas for the gun
+      const weaponAngleInRadians = 6.1;
+      context.rotate(weaponAngleInRadians);
+    
+      // Draw the gun
+      context.drawImage(weaponImageRef.current, 856, 400, 400, 400, -66, -20, 90, 85);
     };
     
     const drawObstacles = () => {
@@ -81,7 +101,6 @@ const Canvas = ({
       context.restore();
     };
     
-
     const drawEnemies = () => {
       // Draw enemies
       enemies.forEach((enemy) => {
@@ -106,7 +125,7 @@ const Canvas = ({
       projectiles.forEach((projectile) => {
         context.save(); // Save the current state of the canvas
         
-        // Translate the canvas to the projectile position
+        // Translate the canvas to the tip of the gun
         context.translate(projectile.position.x, projectile.position.y);
         
         // Rotate the canvas to match the projectile's angle
@@ -117,9 +136,79 @@ const Canvas = ({
         context.moveTo(0, 0);
         context.lineTo(15, 0);
         context.stroke();
-        
+
         context.restore(); // Restore the saved state to prevent the rotation affecting other drawings
       });
+    };
+
+    const drawMuzzleFlash = () => {
+      let gunOffsetX = 80;
+      let gunOffsetY = 80;
+
+      // Get the mouse position relative to the viewport
+      const mouseX = mousePosition.x - window.innerWidth / 2;
+      const mouseY = mousePosition.y - window.innerHeight / 2;
+
+      // Calculate the angle between player and mouse
+      const angleToMouse = Math.atan2(mouseY, mouseX);
+
+      // Calculate the position of the gun tip based on player position and rotation
+      const gunTipX = playerPosition.x + Math.cos(angleToMouse) * gunOffsetX;
+      const gunTipY = playerPosition.y + Math.sin(angleToMouse) * gunOffsetY;     
+
+      const flashOptions = [820, 265, 1090, 1365] 
+
+      const getRandomFlashOption = () => {
+        const randomIndex = Math.floor(Math.random() * flashOptions.length);
+        return flashOptions[randomIndex];
+      };
+
+      context.save(); // Save the current state of the canvas
+    
+      context.translate(gunTipX, gunTipY);
+    
+      context.rotate(angleToMouse);
+    
+      // Draw your gun sprite at the gun tip location
+      context.drawImage(
+        gunShotImgRef.current, 75, getRandomFlashOption(), 200, 200, -25, -50, 75, 75);
+    
+      context.restore();
+    };
+    
+    const drawCrosshair = () => {
+      // Set styles
+      context.strokeStyle = 'white';
+      context.fillStyle = 'white';
+
+      // Draw top line
+      context.beginPath();
+      context.moveTo(mousePosition.x, mousePosition.y + 8);
+      context.lineTo(mousePosition.x, mousePosition.y + 18);
+      context.stroke();
+
+      // Draw bottom line
+      context.beginPath();
+      context.moveTo(mousePosition.x, mousePosition.y - 8);
+      context.lineTo(mousePosition.x, mousePosition.y - 18);
+      context.stroke();
+  
+      // Draw right line
+      context.beginPath();
+      context.moveTo(mousePosition.x + 8, mousePosition.y);
+      context.lineTo(mousePosition.x + 18, mousePosition.y);
+      context.stroke();
+
+      // Draw left line
+      context.beginPath();
+      context.moveTo(mousePosition.x - 8, mousePosition.y);
+      context.lineTo(mousePosition.x - 18, mousePosition.y);
+      context.stroke();
+  
+      // Draw dot in the center
+      context.beginPath();
+      context.arc(mousePosition.x, mousePosition.y, 3, 0, 2 * Math.PI);
+      context.fill();
     };
 
     const updateCanvas = () => {
@@ -127,18 +216,25 @@ const Canvas = ({
       context.clearRect(0, 0, canvas.width, canvas.height);
 
       // Draw game elements
+      drawProjectiles();
       drawPlayer();
       drawObstacles();
       drawEnemies();
-      drawProjectiles();
       drawPlayerCircle();
+
+      // Draw muzzle flash
+      if (isShooting) {
+        drawMuzzleFlash(); 
+      }
+
+      // Draw crosshair
+      drawCrosshair(mousePosition);
     };
 
-    // Preload player image
+    // Preload sprite sheets
     playerImageRef.current.src = playerImageSrc;
-
-    // Preload weapon image
     weaponImageRef.current.src = weaponImageSrc;
+    gunShotImgRef.current.src = gunShotSrc;
 
     // Call the updateCanvas function on every animation frame
     const animationFrameId = requestAnimationFrame(() => {
@@ -149,6 +245,7 @@ const Canvas = ({
     return () => {
       playerImageRef.current.onload = null;
       weaponImageRef.current.onload = null;
+      gunShotImgRef.current.onload = null;
       cancelAnimationFrame(animationFrameId);
     };
   }, [playerPosition, obstacles, enemies, projectiles]);
@@ -158,7 +255,10 @@ const Canvas = ({
       ref={canvasRef}
       width={window.innerWidth}
       height={window.innerHeight}
-      style={{ backgroundColor: 'lightgrey' }}
+      style={{
+        backgroundColor: 'lightgrey',
+        cursor: gameState ? 'none' : 'auto',
+      }}
     />
   );
 };

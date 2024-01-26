@@ -4,24 +4,27 @@ import './game.css'
 import Canvas from './Canvas';
 import Header from './header';
 import Healthbar from './player/Healthbar';
+import GameOverScreen from './GameOverScreen';
 
 const Game = () => {
   const { 
+    isShooting, setIsShooting,
     gameState, setGameState, 
     level, setLevel, 
     playerPosition, setPlayerPosition, 
     projectiles, setProjectiles, 
     obstacles, setObstacles, 
     enemies, setEnemies, 
-    playerHealth, setPlayerHealth 
+    playerHealth, setPlayerHealth,
+    gameOver, setGameOver,
+    gameStats, setGameStats
   } = useGame()
 
   const [changeX, setChangeX] = useState(0)
   const [changeY, setChangeY] = useState(0)
   const [beginningNextLevel, setBeginningNextLevel] = useState(false)
   const [initiation, setInitiation] = useState(true)
-
-  // Assuming you have a state to store mouse coordinates
+  const [canShoot, setCanShoot] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Update mouse coordinates on mouse move
@@ -35,8 +38,6 @@ const Game = () => {
     }, 500);
   }
 
-  initialTimer()
-
   // Temporary starter obstacles
   const preplacedObstacles = [
     { id: 1, position: {x: 100, y: 500}, width: 100, height: 250, health: 100, class: 'obstacle' },
@@ -46,8 +47,8 @@ const Game = () => {
 
   // Temporary starter enemies
   const preplacedEnemies = [
-    { id: 1, position: {x: 200, y: 400}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
-    { id: 2, position: {x: 400, y: 400}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
+    { id: 1, position: {x: 200, y: 300}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
+    { id: 2, position: {x: 400, y: 700}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
     { id: 3, position: {x: 600, y: 100}, width: 50, height: 50, health: 100, maxHealth: 100, class: 'enemy' },
   ];
 
@@ -55,6 +56,8 @@ const Game = () => {
   useEffect(() => {
     setEnemies(preplacedEnemies)
     setObstacles(preplacedObstacles)
+    initialTimer()
+    setGameState(true)
   }, []);
 
   let xInput = [];
@@ -67,6 +70,10 @@ const Game = () => {
 
     if ((e.key === 'a' || e.key === 'd') && xInput.indexOf(e.key) === -1) {
       xInput.push(e.key);
+    }
+
+    if (e.key === 'Tab') {
+      setGameState(!gameState)
     }
   };
 
@@ -144,7 +151,7 @@ const Game = () => {
         }
       }
 
-       // If no collision, update other obstacles positions
+      // If no collision, update other obstacles positions
       if (!hasCollision) {
         return prevObstacles.map((obstacle) => ({
           ...obstacle,
@@ -294,29 +301,56 @@ const Game = () => {
     })
   }
 
-  const handleMouseDown = (e) => {
-    if (e.button === 0) {
+  const fireWeapon = () => {
+    let gunOffsetX = 75;
+    let gunOffsetY = 75;
+
       // Get the mouse position relative to the viewport
-      const mouseX = e.clientX - window.innerWidth / 2;
-      const mouseY = (e.clientY - window.innerHeight / 2);
+      const mouseX = mousePosition.x - window.innerWidth / 2;
+      const mouseY = mousePosition.y - window.innerHeight / 2;
   
-      // Calculate the angle and distance between player and mouse
-      const angle = Math.atan2(mouseY, mouseX);
+      // Calculate the angle between player and mouse
+      const angleToMouse = Math.atan2(mouseY, mouseX);
   
-      // Spawn a bullet at the player's position
+      // Calculate the position of the gun tip based on player position and rotation
+      const gunTipX = playerPosition.x + Math.cos(angleToMouse) * gunOffsetX;
+      const gunTipY = playerPosition.y + Math.sin(angleToMouse) * gunOffsetY;
+  
+      // Spawn a bullet at the gun tip
       const newProjectile = {
         id: Math.floor(Math.random() * Date.now()),
-        position: { x: playerPosition.x, y: playerPosition.y },
+        position: { x: gunTipX, y: gunTipY },
         target: { x: playerPosition.x + mouseX, y: playerPosition.y + mouseY },
-        angle: angle,
+        angle: angleToMouse,
         distance: 10, // Bullet speed
         time: 0, // Bullet life time variable
         width: 10,
         height: 5,
-        class: 'bullet'
+        class: 'bullet',
       };
-  
+
       setProjectiles((prevProjectiles) => [...prevProjectiles, newProjectile]);
+  }
+
+  useEffect(() => {
+    if (isShooting && canShoot) {
+      fireWeapon();
+      setCanShoot(false)
+      setTimeout(() => {
+        setCanShoot(true)
+      }, 200); // Gun fire rate
+    }
+  }, [isShooting, playerPosition]);
+
+  const handleMouseDown = (e) => {
+    if (e.button === 0) {
+      setIsShooting(true)
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (e.button === 0) {
+      setIsShooting(false)
     }
   };
 
@@ -339,7 +373,7 @@ const Game = () => {
         const newTime = time + 1
 
         // Create a new projectile object with updated position
-        const updatedProjectile = { ...prevProjectiles[i], position: { x: projectileX, y: projectileY }, time: newTime };
+        const updatedProjectile = { ...prevProjectiles[i], position: { x: projectileX, y: projectileY }, time: newTime, gunFlash: false };
         
         // Add the updated projectile to the newProjectiles array if it's time hasn't run out
         if (newTime < 300) {
@@ -360,7 +394,7 @@ const Game = () => {
       // Check if enemy is dead
       enemy.health <= 0 && handleDeath(enemy)
       // Enemy chase player
-      moveTowardsPlayer(enemy);
+      // moveTowardsPlayer(enemy);
     }
   }, [playerPosition]);
 
@@ -370,11 +404,19 @@ const Game = () => {
     console.log(playerHealth - 1);
   }
 
+  // Handle enemy death
   const handleDeath = (enemy) => {
+    // Remove enemy from array
     setEnemies((prevEnemies) => {
       let newEnemies = prevEnemies.filter(enm => enm.id !== enemy.id)
       return [...newEnemies]
     })
+
+    // Add a kill to kill stats
+    setGameStats((prevStats) => ({
+      ...prevStats,
+      kills: prevStats.kills + 1,
+    }));
   }
 
   const moveTowardsPlayer = (enemy) => {
@@ -442,6 +484,13 @@ const Game = () => {
     }
     setEnemies(newEnemies)
   }
+
+  useEffect(() => {
+    if (playerHealth <= 0) {
+      setGameState(false)
+      setGameOver(true)
+    }
+  }, [playerHealth]);
   
   useEffect(() => {
     if (gameState) {
@@ -449,6 +498,7 @@ const Game = () => {
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
       window.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mouseup', handleMouseUp);
       window.addEventListener('mousemove', handleMouseMove);
 
       const interval = setInterval(() => {
@@ -468,6 +518,7 @@ const Game = () => {
 
   return (
     <>
+      {gameOver && <GameOverScreen/>}
       <Header/>
       <Healthbar/>
       <Canvas
@@ -475,6 +526,7 @@ const Game = () => {
         obstacles={obstacles}
         enemies={enemies}
         projectiles={projectiles}
+        isShooting={isShooting}
         mousePosition={mousePosition}
       />
     </>
