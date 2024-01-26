@@ -458,7 +458,7 @@ const Game = () => {
       // Check if enemy is dead
       enemy.health <= 0 && handleEnemyDeath(enemy)
       // Enemy chase player
-      // moveTowardsPlayer(enemy);
+      moveTowardsPlayer(enemy);
     }
   }, [playerPosition]);
 
