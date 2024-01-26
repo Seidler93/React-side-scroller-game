@@ -26,6 +26,7 @@ const Game = () => {
   const [beginningNextLevel, setBeginningNextLevel] = useState(false)
   const [initiation, setInitiation] = useState(true)
   const [canShoot, setCanShoot] = useState(true)
+  const [wallCollision, setWallwallCollision] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [playerSpeed, setPlayerSpeed] = useState(1);
   const [loot, setLoot] = useState([]);
@@ -152,46 +153,34 @@ const Game = () => {
     // Initialize collision variable
     let hasCollision = false
 
-    // Update obstacles
-    setObstacles((prevObstacles) => {
-      // Check for collisions with all obstacles
-      for (let i = 0; i < obstacles.length; i++) {
-        let obstacle = obstacles[i];
+    // Check for collisions with all obstacles
+    for (let i = 0; i < obstacles.length; i++) {
+      let obstacle = obstacles[i];
 
-        // Create boundary for obstacle
-        let obstacleRect = {
-          left: obstacle.position.x - changeX,
-          right: obstacle.position.x + obstacle.width - changeX,
-          top: obstacle.position.y - changeY,
-          bottom: obstacle.position.y + obstacle.height - changeY,
-        };
+      // Create boundary for obstacle
+      let obstacleRect = {
+        left: obstacle.position.x - changeX,
+        right: obstacle.position.x + obstacle.width - changeX,
+        top: obstacle.position.y - changeY,
+        bottom: obstacle.position.y + obstacle.height - changeY,
+      };
 
-        // Check if the player is colliding with the object
-        if (
-          playerRect.right > obstacleRect.left &&
-          playerRect.left < obstacleRect.right &&
-          playerRect.bottom > obstacleRect.top &&
-          playerRect.top < obstacleRect.bottom
-        ) {
-          // Collision detected
-          hasCollision = true;
-          break;
-        }
+      // Check if the player is colliding with the object
+      if (
+        playerRect.right > obstacleRect.left &&
+        playerRect.left < obstacleRect.right &&
+        playerRect.bottom > obstacleRect.top &&
+        playerRect.top < obstacleRect.bottom
+      ) {
+        // Collision detected
+        hasCollision = true;
+        setWallwallCollision(true)
+        break;
+      } else { 
+        setWallwallCollision(false)
       }
-
-      // If no collision, update other obstacles positions
-      if (!hasCollision) {
-        return prevObstacles.map((obstacle) => ({
-          ...obstacle,
-          position: {
-            x: obstacle.position.x - changeX,
-            y: obstacle.position.y - changeY,
-          },
-        }));
-      } else {
-        return prevObstacles
-      }
-    });
+    }
+    
 
     // Check for collisions with all enemies
     for (let i = 0; i < enemies.length; i++) {
@@ -217,39 +206,33 @@ const Game = () => {
       }
     }
 
-    
+    for (let i = 0; i < loot.length; i++) {
+      let lootObject = loot[i];
 
-    // Update enemy positions
-    setLoot((prevLoot) => {
-      // Check for collisions with all enemies
-      for (let i = 0; i < loot.length; i++) {
-        let lootObject = loot[i];
+      // Create boundary for obstacle
+      let lootRect = {
+        left: lootObject.position.x - changeX,
+        right: lootObject.position.x + lootObject.width - changeX,
+        top: lootObject.position.y - changeY,
+        bottom: lootObject.position.y + lootObject.height - changeY,
+      };
 
-        // Create boundary for obstacle
-        let lootRect = {
-          left: lootObject.position.x - changeX,
-          right: lootObject.position.x + lootObject.width - changeX,
-          top: lootObject.position.y - changeY,
-          bottom: lootObject.position.y + lootObject.height - changeY,
-        };
-
-        // Check if the player is colliding with the object
-        if (
-          playerRect.right > lootRect.left &&
-          playerRect.left < lootRect.right &&
-          playerRect.bottom > lootRect.top &&
-          playerRect.top < lootRect.bottom
-        ) {
-          // Collision detected
-          console.log('pot');
-          lootCollision()
-        }
+      // Check if the player is colliding with the object
+      if (
+        playerRect.right > lootRect.left &&
+        playerRect.left < lootRect.right &&
+        playerRect.bottom > lootRect.top &&
+        playerRect.top < lootRect.bottom
+      ) {
+        // Collision detected
+        lootCollision(lootObject)
       }
+    }
+  }, [playerPosition])
 
-      console.log(hasCollision);
-      // If no collision, update other obstacles positions
-      if (!hasCollision) {
-        updateEnemyPosition()
+  useEffect(() => {
+    if (!wallCollision) {
+      setLoot((prevLoot) => {
         return prevLoot.map((lootObject) => ({
           ...lootObject,
           position: {
@@ -257,14 +240,22 @@ const Game = () => {
             y: lootObject.position.y - changeY,
           },
         }))
-      } else {
-        return prevLoot
-      }
-    });
+      });
 
-    
+      updateEnemyPosition()
 
+      setObstacles((prevObstacles) => {
+        return prevObstacles.map((obstacle) => ({
+          ...obstacle,
+          position: {
+            x: obstacle.position.x - changeX,
+            y: obstacle.position.y - changeY,
+          },
+        }));        
+      });
+    }
   }, [playerPosition])
+
 
   // Update enemy positions
   const updateEnemyPosition = () => {
@@ -349,7 +340,6 @@ const Game = () => {
 
     setEnemies((prevEnemies) => {
       let newEnemies = prevEnemies.filter(enm => enm.id !== enemy.id)
-      console.log(enemy.health - 25);
       return [...newEnemies, {...enemy, health: (enemy.health - 25)}]
     })
   }
@@ -361,13 +351,17 @@ const Game = () => {
     })
   }
 
-  const lootCollision = () => {
+  const lootCollision = (lootObject) => {
+    setLoot((prevLoot) => {
+      const updatedLoot = prevLoot.filter(loot => loot.id !== lootObject.id)
+      return [...updatedLoot]
+    })
+
     // Calculate the amount to increase by 20%
     const increaseAmount = maxPlayerHealth * 0.2;
 
     // Update player health, ensuring it doesn't exceed maxPlayerHealth
     const newPlayerHealth = Math.min(playerHealth + increaseAmount, maxPlayerHealth);
-    console.log(newPlayerHealth);
     setPlayerHealth(newPlayerHealth)
   }
 
@@ -462,7 +456,7 @@ const Game = () => {
     for (let i = 0; i < enemies.length; i++) {
       let enemy = enemies[i];
       // Check if enemy is dead
-      enemy.health <= 0 && handleDeath(enemy)
+      enemy.health <= 0 && handleEnemyDeath(enemy)
       // Enemy chase player
       // moveTowardsPlayer(enemy);
     }
@@ -471,11 +465,10 @@ const Game = () => {
   // Function to happen when colliding with player
   const playerCollision = () => {
     setPlayerHealth(prevPlayerHealth => prevPlayerHealth - 20)
-    // console.log(playerHealth - 1);
   }
 
   // Handle enemy death
-  const handleDeath = (enemy) => {
+  const handleEnemyDeath = (enemy) => {
     // Remove enemy from array
     setEnemies((prevEnemies) => {
       let newEnemies = prevEnemies.filter(enm => enm.id !== enemy.id)
@@ -488,8 +481,14 @@ const Game = () => {
 
     setLoot((prevLoot) => {
       if (fiftyPercentChance()) {
-        console.log(true);
-        return [{...prevLoot, position: enemy.position, type: 'health pot' }]
+        const newHealthPot = {
+          id: Math.floor(Math.random() * Date.now()),
+            position: enemy.position, 
+            type: 'health pot', 
+            width: 50, 
+            height: 50
+        }
+        return [ ...prevLoot, newHealthPot ]
       } else {
         return prevLoot
       }
@@ -538,12 +537,11 @@ const Game = () => {
       setLevel(prevLevel => prevLevel += 1)
       setTimeout(() => {
         generateEnemies();
-      }, 2000);
+      }, 8000);
     }
   }
 
   const generateEnemies = () => {
-    console.log('enemy');
     function getRandomInt() {
       let min = Math.ceil(1);
       let max = Math.floor(1000);
